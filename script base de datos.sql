@@ -36,7 +36,8 @@ CREATE TABLE clientes (
 CREATE TABLE productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    precio DECIMAL(10,2) NOT NULL
+    precio DECIMAL(10,2) NOT NULL,
+    cantidad INT NOT NULL
 );
 
 -- Tabla de facturas
@@ -73,10 +74,10 @@ INSERT INTO vendedores (username, password) VALUES ('vendedor1', 'vendedor456');
 INSERT INTO clientes (username, password) VALUES ('cliente1', 'cliente789');
 
 -- Insertar algunos productos de ejemplo
-INSERT INTO productos (nombre, precio) VALUES
-('Laptop', 1200.00),
-('Mouse', 25.00),
-('Teclado', 75.00);
+INSERT INTO productos (nombre, precio, cantidad) VALUES
+('Laptop', 1200.00, 10),
+('Mouse', 25.00, 8),
+('Teclado', 75.00, 12);
 
 select * from users;
 select * from admins;
