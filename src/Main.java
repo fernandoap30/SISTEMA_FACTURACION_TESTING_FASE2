@@ -127,13 +127,13 @@ public class Main {
             Producto producto = productoService.obtenerProductoPorId(productoId);
             if (producto == null) {
                 System.out.println("Error: El ID del producto no es válido.");
-                continue; // Volver a pedir el ID del producto
+                continue;
             }
             System.out.print("Cantidad a comprar: ");
             int cantidadComprada = scanner.nextInt();
             if (cantidadComprada > producto.getCantidad()) {
                 System.out.println("Error: No hay suficiente stock disponible para el producto \"" + producto.getNombre() + "\" (Stock actual: " + producto.getCantidad() + ").");
-                continue; // Volver a pedir la cantidad
+                continue;
             }
 
             double subtotal = producto.getPrecio() * cantidadComprada;
@@ -146,7 +146,7 @@ public class Main {
             String respuesta = scanner.next();
             agregarOtroProducto = respuesta.equalsIgnoreCase("s");
         }
-        scanner.nextLine(); // Consume newline
+        scanner.nextLine();
 
         invoiceService.createInvoice(vendedorId, clienteId, detalles, totalFactura);
         System.out.println("Factura emitida exitosamente. Total: $" + totalFactura);
@@ -164,7 +164,7 @@ public class Main {
                     ", Cliente ID: " + invoice.getClienteId() +
                     ", Fecha: " + invoice.getFecha() +
                     ", Monto Total: $" + invoice.getTotal());
-            // Opcionalmente, podrías mostrar aquí los detalles de cada factura llamando a invoiceService.getInvoiceItems(invoice.getId())
+
         }
         System.out.println("---------------------------\n");
     }
@@ -199,11 +199,41 @@ public class Main {
         System.out.println("\n--- Crear Nuevo Producto ---");
         System.out.print("Nombre del producto: ");
         String nombre = scanner.nextLine();
-        System.out.print("Precio del producto: ");
-        double precio = scanner.nextDouble();
-        System.out.print("Cantidad inicial: ");
-        int cantidad = scanner.nextInt();
-        scanner.nextLine(); // Consume newline
+
+        double precio = 0;
+        boolean precioValido = false;
+        while (!precioValido) {
+            System.out.print("Precio del producto: ");
+            String precioStr = scanner.nextLine();
+            try {
+                precio = Double.parseDouble(precioStr);
+                if (precio >= 0) {
+                    precioValido = true;
+                } else {
+                    System.out.println("Error: El precio debe ser un valor positivo.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Ingrese un valor numérico válido para el precio.");
+            }
+        }
+
+
+        int cantidad = 0;
+        boolean cantidadValida = false;
+        while (!cantidadValida) {
+            System.out.print("Cantidad inicial: ");
+            String cantidadStr = scanner.nextLine();
+            try {
+                cantidad = Integer.parseInt(cantidadStr);
+                if (cantidad >= 0) {
+                    cantidadValida = true;
+                } else {
+                    System.out.println("Error: La cantidad debe ser un valor no negativo.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Ingrese un valor entero válido para la cantidad.");
+            }
+        }
 
         if (productoService.crearProducto(nombre, precio, cantidad)) {
             System.out.println("Producto creado exitosamente.");
