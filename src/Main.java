@@ -1,9 +1,11 @@
-import model.User;
-import model.Factura;
-import model.DetalleFactura;
-import model.Producto;
+import dao.ClienteDAO;
+import dao.VendedorDAO;
+import model.*;
 import service.AuthService;
+import service.ClienteService;
 import service.InvoiceService;
+import service.ProductoService;
+import service.VendedorService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +14,9 @@ import java.util.Scanner;
 public class Main {
     private static AuthService authService = new AuthService();
     private static InvoiceService invoiceService = new InvoiceService();
+    private static ClienteService clienteService = new ClienteService();
+    private static VendedorService vendedorService = new VendedorService();
+    private static ProductoService productoService = new ProductoService();
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -39,14 +44,31 @@ public class Main {
             switch (user.getClass().getSimpleName().toLowerCase()) {
                 case "admin":
                     System.out.println("1. Ver todas las facturas");
-                    System.out.println("2. Salir");
+                    System.out.println("2. Crear cliente");
+                    System.out.println("3. Crear vendedor");
+                    System.out.println("4. Crear producto");
+                    System.out.println("5. Salir");
                     int adminChoice = scanner.nextInt();
                     scanner.nextLine(); // Consume newline
-                    if (adminChoice == 1) {
-                        List<Factura> invoices = invoiceService.getInvoicesForAdmin();
-                        printInvoices(invoices);
-                    } else {
-                        running = false;
+                    switch (adminChoice) {
+                        case 1:
+                            List<Factura> invoices = invoiceService.getInvoicesForAdmin();
+                            printInvoices(invoices);
+                            break;
+                        case 2:
+                            crearNuevoCliente();
+                            break;
+                        case 3:
+                            crearNuevoVendedor();
+                            break;
+                        case 4:
+                            crearNuevoProducto();
+                            break;
+                        case 5:
+                            running = false;
+                            break;
+                        default:
+                            System.out.println("Opción inválida.");
                     }
                     break;
 
@@ -83,8 +105,18 @@ public class Main {
     }
 
     private static void emitirFactura(int vendedorId) {
+        Vendedor vendedor = new VendedorDAO().findById(vendedorId);
+        if (vendedor == null) {
+            System.out.println("Error al emitir factura: El ID del vendedor no es válido.");
+            return;
+        }
         System.out.print("ID del cliente: ");
         int clienteId = scanner.nextInt();
+        Cliente cliente = new ClienteDAO().findById(clienteId);
+        if (cliente == null) {
+            System.out.println("Error al emitir factura: El ID del cliente no es válido.");
+            return;
+        }
         List<DetalleFactura> detalles = new ArrayList<>();
         double totalFactura = 0;
 
@@ -92,12 +124,23 @@ public class Main {
         while (agregarOtroProducto) {
             System.out.print("ID del producto: ");
             int productoId = scanner.nextInt();
-            System.out.print("Cantidad: ");
-            int cantidad = scanner.nextInt();
-            System.out.print("Subtotal para este producto: ");
-            double subtotal = scanner.nextDouble(); // En un sistema real, esto se calcularía basado en el precio del producto
-            detalles.add(new DetalleFactura(0, 0, productoId, cantidad, subtotal));
+            Producto producto = productoService.obtenerProductoPorId(productoId);
+            if (producto == null) {
+                System.out.println("Error: El ID del producto no es válido.");
+                continue; // Volver a pedir el ID del producto
+            }
+            System.out.print("Cantidad a comprar: ");
+            int cantidadComprada = scanner.nextInt();
+            if (cantidadComprada > producto.getCantidad()) {
+                System.out.println("Error: No hay suficiente stock disponible para el producto \"" + producto.getNombre() + "\" (Stock actual: " + producto.getCantidad() + ").");
+                continue; // Volver a pedir la cantidad
+            }
+
+            double subtotal = producto.getPrecio() * cantidadComprada;
+            detalles.add(new DetalleFactura(0, 0, productoId, cantidadComprada, subtotal));
             totalFactura += subtotal;
+
+            productoService.actualizarCantidadProducto(productoId, producto.getCantidad() - cantidadComprada);
 
             System.out.print("¿Agregar otro producto? (s/n): ");
             String respuesta = scanner.next();
@@ -106,7 +149,7 @@ public class Main {
         scanner.nextLine(); // Consume newline
 
         invoiceService.createInvoice(vendedorId, clienteId, detalles, totalFactura);
-        System.out.println("Factura emitida exitosamente");
+        System.out.println("Factura emitida exitosamente. Total: $" + totalFactura);
     }
 
     private static void printInvoices(List<Factura> invoices) {
@@ -124,5 +167,48 @@ public class Main {
             // Opcionalmente, podrías mostrar aquí los detalles de cada factura llamando a invoiceService.getInvoiceItems(invoice.getId())
         }
         System.out.println("---------------------------\n");
+    }
+    private static void crearNuevoCliente() {
+        System.out.println("\n--- Crear Nuevo Cliente ---");
+        System.out.print("Nombre de usuario: ");
+        String username = scanner.nextLine();
+        System.out.print("Contraseña: ");
+        String password = scanner.nextLine();
+
+        if (clienteService.crearCliente(username, password)) {
+            System.out.println("Cliente creado exitosamente.");
+        } else {
+            System.out.println("Error al crear el cliente (usuario ya existe o problema interno).");
+        }
+    }
+    private static void crearNuevoVendedor() {
+        System.out.println("\n--- Crear Nuevo Vendedor ---");
+        System.out.print("Nombre de usuario: ");
+        String username = scanner.nextLine();
+        System.out.print("Contraseña: ");
+        String password = scanner.nextLine();
+
+        if (vendedorService.crearVendedor(username, password)) {
+            System.out.println("Vendedor creado exitosamente.");
+        } else {
+            System.out.println("Error al crear el vendedor (usuario ya existe o problema interno).");
+        }
+    }
+
+    private static void crearNuevoProducto() {
+        System.out.println("\n--- Crear Nuevo Producto ---");
+        System.out.print("Nombre del producto: ");
+        String nombre = scanner.nextLine();
+        System.out.print("Precio del producto: ");
+        double precio = scanner.nextDouble();
+        System.out.print("Cantidad inicial: ");
+        int cantidad = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        if (productoService.crearProducto(nombre, precio, cantidad)) {
+            System.out.println("Producto creado exitosamente.");
+        } else {
+            System.out.println("Error al crear el producto.");
+        }
     }
 }
