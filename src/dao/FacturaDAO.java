@@ -20,7 +20,7 @@ public class FacturaDAO {
 
         try {
             conn = DatabaseConnection.getConnection();
-            conn.setAutoCommit(false); // Iniciar transacción
+            conn.setAutoCommit(false);
 
             String sqlFactura = "INSERT INTO facturas (vendedor_id, cliente_id, fecha, total) VALUES (?, ?, ?, ?)";
             stmtFactura = conn.prepareStatement(sqlFactura, Statement.RETURN_GENERATED_KEYS);
@@ -44,11 +44,11 @@ public class FacturaDAO {
                 }
             }
 
-            conn.commit(); // Confirmar transacción
+            conn.commit();
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    conn.rollback(); // Revertir transacción en caso de error
+                    conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
