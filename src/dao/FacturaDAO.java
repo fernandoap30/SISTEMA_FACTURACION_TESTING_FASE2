@@ -115,4 +115,57 @@ public class FacturaDAO {
         }
         return lista;
     }
+    public boolean eliminarFactura(int facturaId) {
+        Connection conn = null;
+        PreparedStatement stmtFactura = null;
+        PreparedStatement stmtDetalle = null;
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            conn.setAutoCommit(false);
+
+            String sqlDetalle = "DELETE FROM detalle_factura WHERE factura_id = ?";
+            stmtDetalle = conn.prepareStatement(sqlDetalle);
+            stmtDetalle.setInt(1, facturaId);
+            stmtDetalle.executeUpdate();
+
+            String sqlFactura = "DELETE FROM facturas WHERE id = ?";
+            stmtFactura = conn.prepareStatement(sqlFactura);
+            stmtFactura.setInt(1, facturaId);
+            int affectedRows = stmtFactura.executeUpdate();
+
+            conn.commit();
+            return affectedRows > 0;
+
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            DatabaseConnection.closeResources(null, stmtDetalle, null);
+            DatabaseConnection.closeResources(null, stmtFactura, conn);
+        }
+    }
+    public boolean actualizarFactura(int facturaId, int vendedorId, int clienteId, LocalDate fecha, double total) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "UPDATE facturas SET vendedor_id = ?, cliente_id = ?, fecha = ?, total = ? WHERE id = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, vendedorId);
+            stmt.setInt(2, clienteId);
+            stmt.setDate(3, Date.valueOf(fecha));
+            stmt.setDouble(4, total);
+            stmt.setInt(5, facturaId);
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
