@@ -4,11 +4,13 @@ public class Producto {
     private int id;
     private String nombre;
     private double precio;
+    private int cantidad;
 
-    public Producto(int id, String nombre, double precio) {
+    public Producto(int id, String nombre, double precio, int cantidad) {
         this.id = id;
         this.nombre = nombre;
         this.precio = precio;
+        this.cantidad = cantidad;
     }
 
     public int getId() {
@@ -23,6 +25,10 @@ public class Producto {
         return precio;
     }
 
+    public int getCantidad() {
+        return cantidad;
+    }
+
     public void setId(int id) {
         this.id = id;
     }
@@ -33,5 +39,8 @@ public class Producto {
 
     public void setPrecio(double precio) {
         this.precio = precio;
+    }
+    public void setCantidad(int cantidad) {
+        this.cantidad = cantidad;
     }
 }
