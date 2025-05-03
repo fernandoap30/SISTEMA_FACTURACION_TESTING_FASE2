@@ -9,10 +9,10 @@ public class VendedorService {
 
     public boolean crearVendedor(String username, String password) {
         if (userDAO.findRoleByUsername(username) == null) {
-            if (userDAO.createUser(username, "vendedor")) { // Primero crear en users
-                return vendedorDAO.crearVendedor(username, password) > 0; // Luego crear el vendedor específico
+            if (userDAO.createUser(username, "vendedor")) {
+                return vendedorDAO.crearVendedor(username, password) > 0;
             }
         }
-        return false; // Usuario ya existe o error al crear vendedor
+        return false;
     }
 }

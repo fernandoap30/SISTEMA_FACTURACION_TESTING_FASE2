@@ -30,8 +30,6 @@ public class InvoiceService {
     public Factura getInvoiceDetails(int invoiceId) {
         Factura factura = facturaDAO.obtenerFacturaPorId(invoiceId);
         if (factura != null) {
-            // Puedes agregar aquí la lógica para obtener los detalles de la factura si es necesario en el futuro.
-            // Por ahora, solo devolvemos la información básica de la factura.
             return factura;
         }
         return null;

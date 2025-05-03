@@ -9,8 +9,8 @@ public class ClienteService {
 
     public boolean crearCliente(String username, String password) {
         if (userDAO.findRoleByUsername(username) == null) {
-            if (userDAO.createUser(username, "cliente")) { // Primero crear en users
-                return clienteDAO.crearCliente(username, password) > 0; // Luego crear el cliente específico
+            if (userDAO.createUser(username, "cliente")) {
+                return clienteDAO.crearCliente(username, password) > 0;
             }
         }
         return false; // Usuario ya existe o error al crear cliente
