@@ -86,4 +86,17 @@ public class UserDAO {
         }
         return null;
     }
+    public boolean createUser(String username, String role) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "INSERT INTO users (username, role) VALUES (?, ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, username);
+            stmt.setString(2, role);
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
