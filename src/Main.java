@@ -7,9 +7,12 @@ import service.InvoiceService;
 import service.ProductoService;
 import service.VendedorService;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+
+import static service.InvoiceService.printInvoiceDetails;
 
 public class Main {
     private static AuthService authService = new AuthService();
@@ -47,9 +50,12 @@ public class Main {
                     System.out.println("2. Crear cliente");
                     System.out.println("3. Crear vendedor");
                     System.out.println("4. Crear producto");
-                    System.out.println("5. Salir");
+                    System.out.println("5. Editar factura");
+                    System.out.println("6. Eliminar factura");
+                    System.out.println("7. Ver detalles de factura");
+                    System.out.println("8. Salir");
                     int adminChoice = scanner.nextInt();
-                    scanner.nextLine(); // Consume newline
+                    scanner.nextLine();
                     switch (adminChoice) {
                         case 1:
                             List<Factura> invoices = invoiceService.getInvoicesForAdmin();
@@ -65,6 +71,18 @@ public class Main {
                             crearNuevoProducto();
                             break;
                         case 5:
+                            editarFactura();
+                            break;
+                        case 6:
+                            eliminarFactura();
+                            break;
+                        case 7:
+                            System.out.print("Ingrese el ID de la factura para ver los detalles: ");
+                            int facturaIdDetalle = scanner.nextInt();
+                            scanner.nextLine();
+                            printInvoiceDetails(facturaIdDetalle);
+                            break;
+                        case 8:
                             running = false;
                             break;
                         default:
@@ -75,29 +93,66 @@ public class Main {
                 case "vendedor":
                     System.out.println("1. Emitir factura");
                     System.out.println("2. Ver mis facturas");
-                    System.out.println("3. Salir");
+                    System.out.println("3. Ver detalles de factura");
+                    System.out.println("4. Salir");
                     int sellerChoice = scanner.nextInt();
                     scanner.nextLine(); // Consume newline
-                    if (sellerChoice == 1) {
-                        emitirFactura(user.getId());
-                    } else if (sellerChoice == 2) {
-                        List<Factura> invoices = invoiceService.getInvoicesForSeller(user.getId());
-                        printInvoices(invoices);
-                    } else {
-                        running = false;
+                    switch (sellerChoice) {
+                        case 1:
+                            emitirFactura(user.getId());
+                            break;
+                        case 2:
+                            List<Factura> sellerInvoices = invoiceService.getInvoicesForSeller(user.getId());
+                            printInvoices(sellerInvoices);
+                            break;
+                        case 3:
+                            System.out.print("Ingrese el ID de la factura para ver los detalles: ");
+                            int facturaIdSeller = scanner.nextInt();
+                            scanner.nextLine();
+                            // Validar que la factura pertenece al vendedor antes de mostrar detalles
+                            Factura facturaSeller = invoiceService.getInvoiceDetails(facturaIdSeller);
+                            if (facturaSeller != null && facturaSeller.getVendedorId() == user.getId()) {
+                                printInvoiceDetails(facturaIdSeller);
+                            } else {
+                                System.out.println("Error: No tiene permiso para ver los detalles de esa factura o la factura no existe.");
+                            }
+                            break;
+                        case 4:
+                            running = false;
+                            break;
+                        default:
+                            System.out.println("Opción inválida.");
                     }
                     break;
 
                 case "cliente":
                     System.out.println("1. Ver mis facturas");
-                    System.out.println("2. Salir");
+                    System.out.println("2. Ver detalles de factura");
+                    System.out.println("3. Salir");
                     int clientChoice = scanner.nextInt();
                     scanner.nextLine(); // Consume newline
-                    if (clientChoice == 1) {
-                        List<Factura> invoices = invoiceService.getInvoicesForClient(user.getId());
-                        printInvoices(invoices);
-                    } else {
-                        running = false;
+                    switch (clientChoice) {
+                        case 1:
+                            List<Factura> clientInvoices = invoiceService.getInvoicesForClient(user.getId());
+                            printInvoices(clientInvoices);
+                            break;
+                        case 2:
+                            System.out.print("Ingrese el ID de la factura para ver los detalles: ");
+                            int facturaIdClient = scanner.nextInt();
+                            scanner.nextLine();
+                            // Validar que la factura pertenece al cliente antes de mostrar detalles
+                            Factura facturaClient = invoiceService.getInvoiceDetails(facturaIdClient);
+                            if (facturaClient != null && facturaClient.getClienteId() == user.getId()) {
+                                printInvoiceDetails(facturaIdClient);
+                            } else {
+                                System.out.println("Error: No tiene permiso para ver los detalles de esa factura o la factura no existe.");
+                            }
+                            break;
+                        case 3:
+                            running = false;
+                            break;
+                        default:
+                            System.out.println("Opción inválida.");
                     }
                     break;
             }
@@ -239,6 +294,64 @@ public class Main {
             System.out.println("Producto creado exitosamente.");
         } else {
             System.out.println("Error al crear el producto.");
+        }
+    }
+    private static void editarFactura() {
+        System.out.println("\n--- Editar Factura ---");
+        System.out.print("Ingrese el ID de la factura a editar: ");
+        int facturaId = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        Factura factura = invoiceService.getInvoiceDetails(facturaId);
+        if (factura == null) {
+            System.out.println("Error: No se encontró la factura con el ID proporcionado.");
+            return;
+        }
+
+        System.out.println("Datos actuales de la factura:");
+        System.out.println("ID: " + factura.getId() + ", Vendedor ID: " + factura.getVendedorId() + ", Cliente ID: " + factura.getClienteId() + ", Fecha: " + factura.getFecha() + ", Total: " + factura.getTotal());
+
+        System.out.print("Nuevo ID del vendedor: ");
+        int nuevoVendedorId = scanner.nextInt();
+        System.out.print("Nuevo ID del cliente: ");
+        int nuevoClienteId = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+        System.out.print("Nueva fecha (YYYY-MM-DD): ");
+        String fechaStr = scanner.nextLine();
+        LocalDate nuevaFecha = LocalDate.parse(fechaStr);
+        System.out.print("Nuevo total: ");
+        double nuevoTotal = scanner.nextDouble();
+        scanner.nextLine(); // Consume newline
+
+        if (invoiceService.actualizarFactura(facturaId, nuevoVendedorId, nuevoClienteId, nuevaFecha, nuevoTotal)) {
+            System.out.println("Factura actualizada exitosamente.");
+        } else {
+            System.out.println("Error al actualizar la factura.");
+        }
+    }
+
+    private static void eliminarFactura() {
+        System.out.println("\n--- Eliminar Factura ---");
+        System.out.print("Ingrese el ID de la factura a eliminar: ");
+        int facturaId = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        Factura factura = invoiceService.getInvoiceDetails(facturaId);
+        if (factura == null) {
+            System.out.println("Error: No se encontró la factura con el ID proporcionado.");
+            return;
+        }
+
+        System.out.println("¿Está seguro que desea eliminar la factura con ID " + factura.getId() + "? (s/n)");
+        String confirmacion = scanner.nextLine();
+        if (confirmacion.equalsIgnoreCase("s")) {
+            if (invoiceService.eliminarFactura(facturaId)) {
+                System.out.println("Factura eliminada exitosamente.");
+            } else {
+                System.out.println("Error al eliminar la factura.");
+            }
+        } else {
+            System.out.println("Eliminación de factura cancelada.");
         }
     }
 }
