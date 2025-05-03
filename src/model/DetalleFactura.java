@@ -6,6 +6,7 @@ public class DetalleFactura {
     private int productoId;
     private int cantidad;
     private double subtotal;
+    private String nombreProducto;
 
     public DetalleFactura(int id, int facturaId, int productoId, int cantidad, double subtotal) {
         this.id = id;
@@ -13,6 +14,23 @@ public class DetalleFactura {
         this.productoId = productoId;
         this.cantidad = cantidad;
         this.subtotal = subtotal;
+    }
+
+    public DetalleFactura(int id, int facturaId, int productoId, int cantidad, double subtotal, String nombreProducto) {
+        this.id = id;
+        this.facturaId = facturaId;
+        this.productoId = productoId;
+        this.cantidad = cantidad;
+        this.subtotal = subtotal;
+        this.nombreProducto = nombreProducto;
+    }
+
+    public String getNombreProducto() {
+        return nombreProducto;
+    }
+
+    public void setNombreProducto(String nombreProducto) {
+        this.nombreProducto = nombreProducto;
     }
 
     public int getId() {
