@@ -9,6 +9,12 @@ public class ClienteService {
 
     public boolean crearCliente(String username, String password) {
         if (userDAO.findRoleByUsername(username) == null) {
+
+            if (password == null || password.trim().isEmpty()) {
+                System.out.println("Error: La contraseña no puede estar vacía.");
+                return false; // No se crea el cliente si la contraseña está vacía
+            }
+
             if (userDAO.createUser(username, "cliente")) {
                 return clienteDAO.crearCliente(username, password) > 0;
             }

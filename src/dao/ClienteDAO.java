@@ -10,7 +10,7 @@ public class ClienteDAO {
 
     public int crearCliente(String username, String password) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "INSERT INTO clientes (username, password) VALUES (?, ?)";
+            String sql = "INSERT INTO clientes (username, password) VALUES (?, SHA2(?, 256))";
             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             stmt.setString(1, username);
             stmt.setString(2, password);
