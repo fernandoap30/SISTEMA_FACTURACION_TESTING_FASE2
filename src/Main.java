@@ -1,5 +1,6 @@
 import dao.ClienteDAO;
 import dao.VendedorDAO;
+import db.DatabaseConnection;
 import model.*;
 import service.AuthService;
 import service.ClienteService;
@@ -7,6 +8,8 @@ import service.InvoiceService;
 import service.ProductoService;
 import service.VendedorService;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -24,14 +27,27 @@ public class Main {
     private static ProductoService productoService = new ProductoService();
     private static Scanner scanner = new Scanner(System.in);
 
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         AuthService authService = new AuthService();
+        Connection connection = null; // Declare connection here
 
         System.out.println("Bienvenido al sistema de facturación");
 
+        try {
+            // Get the connection.  This will throw if it fails.
+            connection = DatabaseConnection.getConnection();
+
+        } catch (SQLException e) {
+            System.err.println("Error inicial al conectar a la base de datos: " + e.getMessage());
+            //e.printStackTrace();
+            scanner.close();
+            return; // Terminate
+        }
+
         User user = null;
-        while (user == null) { // Mantener el bucle hasta que el usuario se autentique correctamente
+        while (user == null) {
             System.out.print("Usuario: ");
             String username = scanner.nextLine();
             if (username.trim().isEmpty()) {
