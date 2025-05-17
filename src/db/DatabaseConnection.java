@@ -10,8 +10,11 @@ public class DatabaseConnection {
     private static final String URL = "jdbc:mysql://localhost:3306/sistema_facturacion";
     private static final String USER = "root";
     private static final String PASSWORD = "root";
+    //private static Connection connection;
+
 
     public static Connection getConnection() throws SQLException {
+        //Class.forName("com.mysql.cj.jdbc.Driver");  <-- REMOVE THIS LINE.  Driver loading is handled elsewhere or automatically
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
