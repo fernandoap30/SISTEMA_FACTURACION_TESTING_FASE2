@@ -8,7 +8,9 @@ import service.ProductoService;
 import service.VendedorService;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -23,21 +25,34 @@ public class Main {
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        AuthService authService = new AuthService();
+
         System.out.println("Bienvenido al sistema de facturación");
 
-        System.out.print("Usuario: ");
-        String username = scanner.nextLine();
-        System.out.print("Contraseña: ");
-        String password = scanner.nextLine();
+        User user = null;
+        while (user == null) { // Mantener el bucle hasta que el usuario se autentique correctamente
+            System.out.print("Usuario: ");
+            String username = scanner.nextLine();
+            if (username.trim().isEmpty()) {
+                System.out.println("Error: El nombre de usuario no puede estar en blanco. Intente nuevamente.");
+                continue;
+            }
+            System.out.print("Contraseña: ");
+            String password = scanner.nextLine();
+            if (password.trim().isEmpty()) {
+                System.out.println("Error: La contraseña no puede estar en blanco. Intente nuevamente.");
+                continue;
+            }
 
-        User user = authService.login(username, password);
-
-        if (user != null) {
-            System.out.println("¡Login exitoso! Rol: " + user.getClass().getSimpleName().toLowerCase());
-            showMenu(user);
-        } else {
-            System.out.println("Credenciales inválidas");
+            user = authService.login(username, password);
+            if (user == null) {
+                System.out.println("Intente nuevamente.");
+            }
         }
+        // El resto del código del método main va aquí
+        showMenu(user);
+        scanner.close();
     }
 
     private static void showMenu(User user) {
@@ -54,8 +69,14 @@ public class Main {
                     System.out.println("6. Eliminar factura");
                     System.out.println("7. Ver detalles de factura");
                     System.out.println("8. Salir");
-                    int adminChoice = scanner.nextInt();
-                    scanner.nextLine();
+                    int adminChoice = -1;
+                    try {
+                        String input = scanner.nextLine();
+                        adminChoice = Integer.parseInt(input);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Error: Ingrese un número válido para la opción del menú.");
+                        continue;
+                    }
                     switch (adminChoice) {
                         case 1:
                             List<Factura> invoices = invoiceService.getInvoicesForAdmin();
@@ -78,7 +99,14 @@ public class Main {
                             break;
                         case 7:
                             System.out.print("Ingrese el ID de la factura para ver los detalles: ");
-                            int facturaIdDetalle = scanner.nextInt();
+                            int facturaIdDetalle = -1;
+                            try{
+                                facturaIdDetalle = scanner.nextInt();
+                            } catch(InputMismatchException e){
+                                System.out.println("Error: Debe ingresar un ID de factura válido");
+                                scanner.nextLine();
+                                break;
+                            }
                             scanner.nextLine();
                             printInvoiceDetails(facturaIdDetalle);
                             break;
@@ -95,8 +123,14 @@ public class Main {
                     System.out.println("2. Ver mis facturas");
                     System.out.println("3. Ver detalles de factura");
                     System.out.println("4. Salir");
-                    int sellerChoice = scanner.nextInt();
-                    scanner.nextLine(); // Consume newline
+                    int sellerChoice = -1;
+                    try {
+                        String input = scanner.nextLine();
+                        sellerChoice = Integer.parseInt(input);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Error: Ingrese un número válido para la opción del menú.");
+                        continue;
+                    }
                     switch (sellerChoice) {
                         case 1:
                             emitirFactura(user.getId());
@@ -107,7 +141,14 @@ public class Main {
                             break;
                         case 3:
                             System.out.print("Ingrese el ID de la factura para ver los detalles: ");
-                            int facturaIdSeller = scanner.nextInt();
+                            int facturaIdSeller = -1;
+                            try{
+                                facturaIdSeller = scanner.nextInt();
+                            } catch(InputMismatchException e){
+                                System.out.println("Error: Debe ingresar un ID de factura válido");
+                                scanner.nextLine();
+                                break;
+                            }
                             scanner.nextLine();
                             // Validar que la factura pertenece al vendedor antes de mostrar detalles
                             Factura facturaSeller = invoiceService.getInvoiceDetails(facturaIdSeller);
@@ -129,8 +170,14 @@ public class Main {
                     System.out.println("1. Ver mis facturas");
                     System.out.println("2. Ver detalles de factura");
                     System.out.println("3. Salir");
-                    int clientChoice = scanner.nextInt();
-                    scanner.nextLine(); // Consume newline
+                    int clientChoice = -1;
+                    try {
+                        String input = scanner.nextLine();
+                        clientChoice = Integer.parseInt(input);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Error: Ingrese un número válido para la opción del menú.");
+                        continue;
+                    }
                     switch (clientChoice) {
                         case 1:
                             List<Factura> clientInvoices = invoiceService.getInvoicesForClient(user.getId());
@@ -138,7 +185,14 @@ public class Main {
                             break;
                         case 2:
                             System.out.print("Ingrese el ID de la factura para ver los detalles: ");
-                            int facturaIdClient = scanner.nextInt();
+                            int facturaIdClient = -1;
+                            try{
+                                facturaIdClient = scanner.nextInt();
+                            } catch(InputMismatchException e){
+                                System.out.println("Error: Debe ingresar un ID de factura válido");
+                                scanner.nextLine();
+                                break;
+                            }
                             scanner.nextLine();
                             // Validar que la factura pertenece al cliente antes de mostrar detalles
                             Factura facturaClient = invoiceService.getInvoiceDetails(facturaIdClient);
@@ -178,16 +232,36 @@ public class Main {
         boolean agregarOtroProducto = true;
         while (agregarOtroProducto) {
             System.out.print("ID del producto: ");
-            int productoId = scanner.nextInt();
+            int productoId = -1;
+            try {
+                productoId = scanner.nextInt();
+            } catch (InputMismatchException e) {
+                System.out.println("Error: Debe ingresar un ID de producto válido.");
+                scanner.nextLine();
+                continue;
+            }
+
             Producto producto = productoService.obtenerProductoPorId(productoId);
             if (producto == null) {
                 System.out.println("Error: El ID del producto no es válido.");
                 continue;
             }
             System.out.print("Cantidad a comprar: ");
-            int cantidadComprada = scanner.nextInt();
+            int cantidadComprada = -1;
+            try {
+                cantidadComprada = scanner.nextInt();
+            } catch (InputMismatchException e) {
+                System.out.println("Error: Debe ingresar una cantidad válida.");
+                scanner.nextLine();
+                continue;
+            }
+
             if (cantidadComprada > producto.getCantidad()) {
                 System.out.println("Error: No hay suficiente stock disponible para el producto \"" + producto.getNombre() + "\" (Stock actual: " + producto.getCantidad() + ").");
+                continue;
+            }
+            if (cantidadComprada <= 0) {
+                System.out.println("Error: La cantidad a comprar debe ser mayor que cero.");
                 continue;
             }
 
@@ -299,8 +373,15 @@ public class Main {
     private static void editarFactura() {
         System.out.println("\n--- Editar Factura ---");
         System.out.print("Ingrese el ID de la factura a editar: ");
-        int facturaId = scanner.nextInt();
-        scanner.nextLine(); // Consume newline
+        int facturaId = -1;
+        try {
+            facturaId = scanner.nextInt();
+        } catch (InputMismatchException e) {
+            System.out.println("Error: Debe ingresar un ID de factura válido.");
+            scanner.nextLine();
+            return;
+        }
+        scanner.nextLine();
 
         Factura factura = invoiceService.getInvoiceDetails(facturaId);
         if (factura == null) {
@@ -312,16 +393,64 @@ public class Main {
         System.out.println("ID: " + factura.getId() + ", Vendedor ID: " + factura.getVendedorId() + ", Cliente ID: " + factura.getClienteId() + ", Fecha: " + factura.getFecha() + ", Total: " + factura.getTotal());
 
         System.out.print("Nuevo ID del vendedor: ");
-        int nuevoVendedorId = scanner.nextInt();
+        int nuevoVendedorId = -1;
+        try {
+            nuevoVendedorId = scanner.nextInt();
+        } catch (InputMismatchException e) {
+            System.out.println("Error: Debe ingresar un ID de vendedor válido.");
+            scanner.nextLine();
+            return;
+        }
+        Vendedor vendedor = new VendedorDAO().findById(nuevoVendedorId);
+        if (vendedor == null) {
+            System.out.println("Error: El ID de vendedor ingresado no existe.");
+            scanner.nextLine();
+            return;
+        }
+
         System.out.print("Nuevo ID del cliente: ");
-        int nuevoClienteId = scanner.nextInt();
-        scanner.nextLine(); // Consume newline
-        System.out.print("Nueva fecha (YYYY-MM-DD): ");
-        String fechaStr = scanner.nextLine();
-        LocalDate nuevaFecha = LocalDate.parse(fechaStr);
+        int nuevoClienteId = -1;
+        try {
+            nuevoClienteId = scanner.nextInt();
+        } catch (InputMismatchException e) {
+            System.out.println("Error: Debe ingresar un ID de cliente válido.");
+            scanner.nextLine();
+            return;
+        }
+        Cliente cliente = new ClienteDAO().findById(nuevoClienteId);
+        if (cliente == null) {
+            System.out.println("Error: El ID de cliente ingresado no existe.");
+            scanner.nextLine();
+            return;
+        }
+        scanner.nextLine();
+
+        LocalDate nuevaFecha = null;
+        while (nuevaFecha == null) {
+            System.out.print("Nueva fecha (YYYY-MM-DD): ");
+            String fechaStr = scanner.nextLine();
+            try {
+                nuevaFecha = LocalDate.parse(fechaStr);
+            } catch (DateTimeParseException e) {
+                System.out.println("Error: Formato de fecha inválido. Por favor, use el formato YYYY-MM-DD.");
+            }
+        }
+
         System.out.print("Nuevo total: ");
-        double nuevoTotal = scanner.nextDouble();
-        scanner.nextLine(); // Consume newline
+        double nuevoTotal = -1;
+        try {
+            nuevoTotal = scanner.nextDouble();
+        } catch (InputMismatchException e) {
+            System.out.println("Error: Debe ingresar un total de factura válido.");
+            scanner.nextLine();
+            return;
+        }
+        scanner.nextLine();
+
+        if (nuevoTotal <= 0) {
+            System.out.println("Error: El total de la factura debe ser mayor que cero.");
+            return;
+        }
 
         if (invoiceService.actualizarFactura(facturaId, nuevoVendedorId, nuevoClienteId, nuevaFecha, nuevoTotal)) {
             System.out.println("Factura actualizada exitosamente.");
