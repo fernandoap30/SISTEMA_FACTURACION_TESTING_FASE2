@@ -57,4 +57,18 @@ public class ProductoDAO {
         }
         return false;
     }
+    public Producto findByNombre(String nombre) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "SELECT id, nombre, precio, cantidad FROM productos WHERE LOWER(nombre) = LOWER(?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, nombre);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new Producto(rs.getInt("id"), rs.getString("nombre"), rs.getDouble("precio"), rs.getInt("cantidad"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
