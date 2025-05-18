@@ -3,6 +3,7 @@ package dao;
 import db.DatabaseConnection;
 import model.Cliente;
 import model.Vendedor;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
 
@@ -10,10 +11,11 @@ public class ClienteDAO {
 
     public int crearCliente(String username, String password) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "INSERT INTO clientes (username, password) VALUES (?, SHA2(?, 256))";
+            String sql = "INSERT INTO clientes (username, password) VALUES (?, ?)";
             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             stmt.setString(1, username);
-            stmt.setString(2, password);
+            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+            stmt.setString(2, hashedPassword);
             stmt.executeUpdate();
             java.sql.ResultSet rs = stmt.getGeneratedKeys();
             if (rs.next()) {
@@ -32,6 +34,22 @@ public class ClienteDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 return new Cliente(rs.getInt("id"), rs.getString("username"), rs.getString("password"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    public Cliente findByUsernameAndPassword(String username, String password) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "SELECT id, username, password FROM clientes WHERE username = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                if (BCrypt.checkpw(password, rs.getString("password"))) {
+                    return new Cliente(rs.getInt("id"), rs.getString("username"), rs.getString("password"));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
